@@ -1,8 +1,11 @@
 # Módulo: main.py
 
 from fastapi import FastAPI
-from models import Product, User
-from database import insert_user
+from models import User
+from database import insert_user, get_users, create_table
+
+# Aseguramos que la tabla de usuarios exista al iniciar la app
+create_table()
 
 app = FastAPI()
 
@@ -18,10 +21,14 @@ def read_root():
 def read_root(nombre: str):
   return {"saludo": f"Hola, [{nombre}]!"}
 
-# Crear un usuario
+# Endpoint para crear un nuevo usuario
 @app.post("/users/")
 def create_user(user: User):
-  # Tu lógica aquí
-  # Pista: los datos del usuario están en la variable `user`
   insert_user(user.name, user.email)
   return {"message": "Usuario creado exitosamente"}
+
+# Endpoint para leer todos los usuarios
+@app.get("/users/")
+def read_users():
+  users = get_users()
+  return users

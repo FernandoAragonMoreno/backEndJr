@@ -6,6 +6,8 @@ DATABASE_NAME = "users.db"
 
 def get_db():
   conn = sqlite3.connect(DATABASE_NAME)
+  # Permite acceder a las columnas por nombre
+  conn.row_factory = sqlite3.Row
   return conn
 
 def create_table():
@@ -34,9 +36,24 @@ No te olvides de hacer conn.commit() para guardar los cambios y conn.close() al 
 def insert_user(name: str, email: str):
   conn = get_db()
   cursor = conn.cursor()
-  # Usamos (?) como placeholders
-  cursor.execute("""
-    INSERT INTO users (name, email) VALUES (?, ?);
-  """, (name, email)) # Pasamos los valores como una tupla
+  cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", (name, email))
   conn.commit()
   conn.close()
+
+
+"""
+El objetivo es crear un endpoint que recupere todos los usuarios
+de la base de datos y los retorne como una lista.
+"""
+
+def get_users():
+  conn = get_db()
+  cursor = conn.cursor()
+  cursor.execute("SELECT id, name, email FROM users")
+  users_db = cursor.fetchall()
+  conn.close()
+
+  # Convertimos los resultados a una lista de diccionarios
+  users = [{"id": user["id"], "name": user["name"], "email": user["email"]} for user in users_db]
+  return users
+
