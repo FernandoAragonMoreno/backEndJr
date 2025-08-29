@@ -57,3 +57,14 @@ def get_users():
   users = [{"id": user["id"], "name": user["name"], "email": user["email"]} for user in users_db]
   return users
 
+"""
+Crearemos una nueva función en database.py que ejecutará una sentencia UPDATE
+"""
+
+def update_user(user_id: int, name: str, email: str):
+  conn = get_db()
+  cursor = conn.cursor()
+  cursor.execute("UPDATE users SET name = ?, email = ? WHERE id = ?", (name, email, user_id))
+  conn.commit()
+  conn.close()
+  return cursor.rowcount > 0
