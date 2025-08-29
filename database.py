@@ -68,3 +68,15 @@ def update_user(user_id: int, name: str, email: str):
   conn.commit()
   conn.close()
   return cursor.rowcount > 0
+
+"""
+Crea una nueva función en database.py que ejecute una sentencia DELETE.
+"""
+
+def delete_user(user_id: int):
+  conn = get_db()
+  cursor = conn.cursor()
+  cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+  conn.commit()
+  conn.close()
+  return cursor.rowcount > 0

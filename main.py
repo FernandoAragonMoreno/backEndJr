@@ -1,8 +1,8 @@
 # Módulo: main.py
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from models import User
-from database import insert_user, get_users, create_table, update_existing_user, update_user
+from database import insert_user, get_users, create_table, update_user, delete_user
 
 # Aseguramos que la tabla de usuarios exista al iniciar la app
 create_table()
@@ -42,3 +42,13 @@ def update_existing_user(user_id: int, user: User):
       detail = "Usuario no encontrado"
     )
   return {"message": "Usuario actualizado exitosamente"}
+
+# Endpoint para eliminar un usuario
+@app.delete("/users/{user_id}")
+def delete_existing_user(user_id: int):
+  if not delete_user(user_id):
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail = "Usuario no encontrado"
+    )
+  return {"message": "Usuario eliminado exitosamente"}
