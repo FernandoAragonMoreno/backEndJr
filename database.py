@@ -36,9 +36,14 @@ No te olvides de hacer conn.commit() para guardar los cambios y conn.close() al 
 def insert_user(name: str, email: str):
   conn = get_db()
   cursor = conn.cursor()
-  cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", (name, email))
-  conn.commit()
-  conn.close()
+  try:
+    cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", (name, email))
+    conn.commit()
+    return True # Retorna True si la inserción es exitosa
+  except sqlite3.IntegrityError:
+    return False # Retorna False si hay un error de integridad (ej. correo duplicado)
+  finally:
+    conn.close()
 
 
 """
@@ -64,10 +69,14 @@ Crearemos una nueva función en database.py que ejecutará una sentencia UPDATE
 def update_user(user_id: int, name: str, email: str):
   conn = get_db()
   cursor = conn.cursor()
-  cursor.execute("UPDATE users SET name = ?, email = ? WHERE id = ?", (name, email, user_id))
-  conn.commit()
-  conn.close()
-  return cursor.rowcount > 0
+  try:
+    cursor.execute("UPDATE users SET name = ?, email = ? WHERE id = ?", (name, email, user_id))
+    conn.commit()
+    return cursor.rowcount > 0  # Retorna True si se actualizó una fila
+  except sqlite3.IntegrityError:
+    return False # Retorna False si hay un error de integridad (ej. correo duplicado)
+  finally:
+    conn.close()
 
 """
 Crea una nueva función en database.py que ejecute una sentencia DELETE.

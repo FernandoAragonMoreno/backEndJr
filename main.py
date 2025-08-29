@@ -9,22 +9,30 @@ create_table()
 
 app = FastAPI()
 
+"""
 @app.get("/")
 def read_root():
   return {"message": "Hola, mundo"}
+"""
 
 #Crea una nueva ruta @app.get("/saludo/{nombre}")
 #que tome un parámetro de ruta llamado nombre y
 #retorne un JSON con el mensaje {"saludo": "Hola, [nombre]!"}.
 
+"""
 @app.get("/saludo/{nombre}")
 def read_root(nombre: str):
   return {"saludo": f"Hola, [{nombre}]!"}
+"""
 
 # Endpoint para crear un nuevo usuario
 @app.post("/users/")
 def create_user(user: User):
-  insert_user(user.name, user.email)
+  if not insert_user(user.name, user.email):
+    raise HTTPException(
+      status_code=status.HTTP_409_CONFLICT, # El código 409 es para conflictos
+      detail = "El email ya está registrado"
+    )
   return {"message": "Usuario creado exitosamente"}
 
 # Endpoint para leer todos los usuarios
@@ -37,9 +45,11 @@ def read_users():
 @app.put("/users/{user_id}")
 def update_existing_user(user_id: int, user: User):
   if not update_user(user_id, user.name, user.email):
+    # Si el usuario no existe, levanta un error 404
+    # Si el correo ya existe, también retorna False
     raise HTTPException(
-      status_code=status.HTTP_404_NOT_FOUND,
-      detail = "Usuario no encontrado"
+      status_code=status.HTTP_409_CONFLICT,
+      detail = "El correo ya está registrado"
     )
   return {"message": "Usuario actualizado exitosamente"}
 
