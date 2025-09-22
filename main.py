@@ -3,12 +3,13 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 from models import User
 from repositories import UserRepository, pwd_context
+from database import create_table
 import sqlite3
 
 #from database import insert_user, get_users, create_table, update_user, delete_user
 
 # Aseguramos que la tabla de usuarios exista al iniciar la app
-#create_table()
+# create_table()
 
 app = FastAPI()
 
@@ -42,7 +43,7 @@ def read_root(nombre: str):
 @app.post("/users/")
 def create_user(user: User, db: sqlite3.Connection = Depends(get_db)):
   repo = UserRepository()
-  if not repo.insert_user(db, user.name, user.email):
+  if not repo.insert_user(db, user.name, user.email, user.password):
     raise HTTPException(
       status_code=status.HTTP_409_CONFLICT, # El código 409 es para conflictos
       detail = "El email ya está registrado"
@@ -60,7 +61,7 @@ def read_users(db: sqlite3.Connection = Depends(get_db)):
 @app.put("/users/{user_id}")
 def update_existing_user(user_id: int, user: User, db: sqlite3.Connection = Depends(get_db)):
   repo = UserRepository()
-  if not repo.update_user(db, user_id, user.name, user.email):
+  if not repo.update_user(db, user_id, user.name, user.email, user.password):
     # Si el usuario no existe, levanta un error 404
     # Si el correo ya existe, también retorna False
     raise HTTPException(
