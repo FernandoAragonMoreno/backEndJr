@@ -1,13 +1,25 @@
 # Módulo: main.py
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from models import User
-from database import insert_user, get_users, create_table, update_user, delete_user
+from repositories import UserRepository
+import sqlite3
+
+#from database import insert_user, get_users, create_table, update_user, delete_user
 
 # Aseguramos que la tabla de usuarios exista al iniciar la app
-create_table()
+#create_table()
 
 app = FastAPI()
+
+# 1. Dependencia de la base de datos
+def get_db():
+  conn = sqlite3.connect("users.db")
+  conn.row_factory = sqlite3.Row
+  try:
+    yield conn
+  finally:
+    conn.close()
 
 """
 @app.get("/")
@@ -26,9 +38,11 @@ def read_root(nombre: str):
 """
 
 # Endpoint para crear un nuevo usuario
+# 2. Uso de la dependencia de la base de datos - "Inyección de Dependencias"
 @app.post("/users/")
-def create_user(user: User):
-  if not insert_user(user.name, user.email):
+def create_user(user: User, db: sqlite3.Connection = Depends(get_db)):
+  repo = UserRepository()
+  if not repo.insert_user(db, user.name, user.email):
     raise HTTPException(
       status_code=status.HTTP_409_CONFLICT, # El código 409 es para conflictos
       detail = "El email ya está registrado"
@@ -37,14 +51,16 @@ def create_user(user: User):
 
 # Endpoint para leer todos los usuarios
 @app.get("/users/")
-def read_users():
-  users = get_users()
+def read_users(db: sqlite3.Connection = Depends(get_db)):
+  repo = UserRepository()
+  users = repo.get_users(db)
   return users
 
 # Endpoint para actualizar un usuario
 @app.put("/users/{user_id}")
-def update_existing_user(user_id: int, user: User):
-  if not update_user(user_id, user.name, user.email):
+def update_existing_user(user_id: int, user: User, db: sqlite3.Connection = Depends(get_db)):
+  repo = UserRepository()
+  if not repo.update_user(db, user_id, user.name, user.email):
     # Si el usuario no existe, levanta un error 404
     # Si el correo ya existe, también retorna False
     raise HTTPException(
@@ -55,8 +71,9 @@ def update_existing_user(user_id: int, user: User):
 
 # Endpoint para eliminar un usuario
 @app.delete("/users/{user_id}")
-def delete_existing_user(user_id: int):
-  if not delete_user(user_id):
+def delete_existing_user(user_id: int, db: sqlite3.Connection = Depends(get_db)):
+  repo = UserRepository()
+  if not repo.delete_user(db, user_id):
     raise HTTPException(
       status_code=status.HTTP_404_NOT_FOUND,
       detail = "Usuario no encontrado"
