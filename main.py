@@ -1,9 +1,11 @@
 # Módulo: main.py
 
+from nt import access
 from fastapi import FastAPI, HTTPException, status, Depends
 from models import User
 from repositories import UserRepository, pwd_context
-from database import create_table
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
 import sqlite3
 
 #from database import insert_user, get_users, create_table, update_user, delete_user
@@ -12,6 +14,21 @@ import sqlite3
 # create_table()
 
 app = FastAPI()
+
+# Configuración de seguridad
+SECRET_KEY = "password_test"  # ¡Cámbiala!
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+  to_encode = data.copy()
+  if expires_delta:
+    expire = datetime.utcnow() + expires_delta
+  else:
+    expire = datetime.utcnow() + timedelta(minutes=15)
+  to_encode.update({"exp": expire})
+  encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+  return encoded_jwt
 
 # 1. Dependencia de la base de datos
 def get_db():
@@ -99,4 +116,11 @@ def login(email: str, password: str, db: sqlite3.Connection = Depends(get_db)):
       detail = "Credenciales incorrectas"
     )
 
-  return {"message": "Inicio de sesión exitoso", "token": "TOKEN_FALSO_POR_AHORA"}
+  # Crear el token
+  access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+  access_token = create_access_token(
+    data={"sub": user["email"]},
+    expires_delta=access_token_expires
+  )
+
+  return {"access_token": access_token, "token_type": "bearer"}
