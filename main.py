@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, HTTPException, status, Depends
 from models import User
-from repositories import UserRepository
+from repositories import UserRepository, pwd_context
 import sqlite3
 
 #from database import insert_user, get_users, create_table, update_user, delete_user
@@ -79,3 +79,23 @@ def delete_existing_user(user_id: int, db: sqlite3.Connection = Depends(get_db))
       detail = "Usuario no encontrado"
     )
   return {"message": "Usuario eliminado exitosamente"}
+
+@app.post("/token")
+def login(email: str, password: str, db: sqlite3.Connection = Depends(get_db)):
+  repo = UserRepository()
+  user = repo.get_user_by_email(db, email)
+
+  if not user:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail = "Credenciales incorrectas"
+    )
+
+  # Verificar la contraseña
+  if not pwd_context.verify(password, user["password"]):
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail = "Credenciales incorrectas"
+    )
+
+  return {"message": "Inicio de sesión exitoso", "token": "TOKEN_FALSO_POR_AHORA"}

@@ -42,3 +42,18 @@ class UserRepository:
     cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
     conn.commit()
     return cursor.rowcount > 0
+
+  """
+  crea una nueva función llamada get_user_by_email que reciba un email y la conexión a la base de datos,
+  y retorne el registro del usuario (incluido el hash de la contraseña).
+  Si no se encuentra el usuario, debe retornar None.
+  """
+
+  def get_user_by_email(self, conn: sqlite3.Connection, email: str):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, password FROM users WHERE email = ?", (email,))
+    user_db = cursor.fetchone()
+    if user_db:
+      return dict(user_db)
+    else:
+      return None
