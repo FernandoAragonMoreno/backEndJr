@@ -1,10 +1,19 @@
+# Módulo: repositories.py
+
 import sqlite3
+from passlib.context import CryptContext
+
+# Define el contexto para el cifrado
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserRepository:
-  def insert_user(self, conn: sqlite3.Connection, name: str, email: str):
+  def insert_user(self, conn: sqlite3.Connection, name: str, email: str, password: str):
+    # 1. Hashea la contraseña
+    hashed_password = pwd_context.hash(password)
     cursor = conn.cursor()
     try:
-      cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", (name, email))
+      # 2. Guarda el hash en la DB
+      cursor.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", (name, email, hashed_password))
       conn.commit()
       return True # Retorna True si la inserción es exitosa
     except sqlite3.IntegrityError:

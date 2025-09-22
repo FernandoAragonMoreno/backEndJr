@@ -6,6 +6,7 @@ class User(BaseModel):
   id: int | None = None  # id será opcional al crear un usuario
   name: str
   email: str
+  password: str
 
 """
 Basado en el ejemplo, crea un modelo Product usando Pydantic.
